@@ -1,11 +1,11 @@
 const fetch = require('node-fetch');
-const { getUrlInfo } = require('./utils');
+const { getUrlInfo, getAioLogger } = require('./utils');
 
 const FLOODGATE_CONFIG = '/drafts/floodgate/configs/config.json';
-//const FLOODGATE_CONFIG = require('./project-config.json');
 const GRAPH_API = 'https://graph.microsoft.com/v1.0';
 
-function getSharepointConfig(config, logger) {
+function getSharepointConfig(config) {
+    const logger = getAioLogger();
     logger.info('inside getSharepointConfig');
     const sharepointConfig = config.sp.data[0];
     // ${sharepointConfig.site} - MS Graph API Url with site pointers.
@@ -76,7 +76,8 @@ function getSharepointConfig(config, logger) {
     };
 }
 
-async function fetchConfigJson(configPath, logger) {
+async function fetchConfigJson(configPath) {
+    const logger = getAioLogger();
     logger.info('inside fetch config json');
     const configResponse = await fetch(configPath);
     if (!configResponse.ok) {
@@ -85,7 +86,8 @@ async function fetchConfigJson(configPath, logger) {
     return configResponse.json();
 }
 
-function getHelixAdminConfig(logger) {
+function getHelixAdminConfig() {
+    const logger = getAioLogger();
     logger.info('inside getHelixAdminConfig');
     const adminServerURL = 'https://admin.hlx.page';
     return {
@@ -96,19 +98,20 @@ function getHelixAdminConfig(logger) {
     };
 }
 
-async function getConfig(logger) {
+async function getConfig(adminPageUri) {
+    const logger = getAioLogger();
     logger.info('inside get config');
-    const urlInfo = getUrlInfo(logger);
+    const urlInfo = getUrlInfo(adminPageUri);
     logger.info('after getUrlInfo call');
     logger.info(urlInfo);
     if (urlInfo.isValid()) {
         const configPath = `${urlInfo.origin}${FLOODGATE_CONFIG}`;
-        logger.info('config path:: ' + configPath);
-        const configJson = await fetchConfigJson(configPath, logger);
+        logger.info(`config path:: ${configPath}`);
+        const configJson = await fetchConfigJson(configPath);
         logger.info(JSON.stringify(configJson));
         return {
-            sp: getSharepointConfig(configJson, logger),
-            admin: getHelixAdminConfig(logger),
+            sp: getSharepointConfig(configJson),
+            admin: getHelixAdminConfig(),
         };
     }
     return undefined;
@@ -116,5 +119,4 @@ async function getConfig(logger) {
 
 module.exports = {
     getConfig,
-    FLOODGATE_CONFIG,
-}
+};
