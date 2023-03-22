@@ -1,0 +1,15 @@
+{
+    "sp": {
+        "data": [
+            {
+                "site": "https://graph.microsoft.com/v1.0/sites/adobe.sharepoint.com,d21b93ad-c3bc-4896-b58e-fd76f04c2834,563e43e2-09db-47a2-8d99-92b6161a051b",
+                "rootFolders": "/milo",
+                "clientId": "008626ae-f818-43d8-9d7f-26afe05e771d",
+                "authority": "https://login.microsoftonline.com/fa7b1b5a-7b34-4387-94ae-d2c178decee1",
+                "shareurl": "https://adobe.sharepoint.com/:f:/r/sites/adobecom/Shared%20Documents/milo<relativePath>?web=1",
+                "fgRootFolder": "/milo-pink",
+                "fgShareUrl": "https://adobe.sharepoint.com/:f:/r/sites/adobecom/Shared%20Documents/milo-pink<relativePath>?web=1"
+            }
+        ]
+    }
+}

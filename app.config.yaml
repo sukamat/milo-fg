@@ -5,23 +5,28 @@ application:
     packages:
       milo-fg:
         license: Apache-2.0
-        actions:
-          generic:
-            function: actions/generic/index.js
+        actions:          
+          copy:
+            function: actions/copy/copy.js
+            web: 'yes'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug          
+          copy-worker:
+            function: actions/copy/worker.js
+            web: 'no'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug                  
+          promote-worker:
+            function: actions/promote/worker.js
             web: 'yes'
             runtime: nodejs:16
             inputs:
               LOG_LEVEL: debug
-            annotations:
-              require-adobe-auth: true
-              final: true
-          publish-events:
-            function: actions/publish-events/index.js
+          getfeed:
+            function: actions/getfeed/index.js
             web: 'yes'
             runtime: nodejs:16
             inputs:
               LOG_LEVEL: debug
-              apiKey: $SERVICE_API_KEY
-            annotations:
-              require-adobe-auth: true
-              final: true
