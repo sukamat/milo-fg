@@ -6,9 +6,15 @@ application:
       milo-fg:
         license: Apache-2.0
         actions:
+          promote:
+            function: actions/promote/promote.js
+            web: 'yes'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
           promote-worker:
             function: actions/promote/worker.js
-            web: 'yes'
+            web: 'no'
             runtime: nodejs:16
             inputs:
               LOG_LEVEL: debug

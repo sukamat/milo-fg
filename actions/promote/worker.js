@@ -85,6 +85,7 @@ async function findAllFloodgatedFiles(baseURI, options, rootFolder, fgFiles, fgF
 async function promoteCopy(spToken, adminPageUri, srcPath, destinationFolder) {
     const logger = getAioLogger();
     logger.info(`promoteCopy::${srcPath} --- ${destinationFolder}`);
+
     await createFolder(spToken, adminPageUri, destinationFolder);
     const { sp } = await getConfig(adminPageUri);
     const destRootFolder = `${sp.api.file.copy.baseURI}`.split('/').pop();
@@ -94,8 +95,6 @@ async function promoteCopy(spToken, adminPageUri, srcPath, destinationFolder) {
         method: sp.api.file.copy.method,
         body: JSON.stringify(payload),
     });
-
-    logger.info('promoteCopy:: got payload');
 
     // copy source is the pink directory for promote
     const copyStatusInfo = await fetch(`${sp.api.file.copy.fgBaseURI}${srcPath}:/copy`, options);
@@ -128,7 +127,6 @@ async function promoteFloodgatedFiles(spToken, adminPageUri, projectExcelPath) {
             if (res.ok) {
                 // File exists at the destination (main content tree)
                 // Get the file in the pink directory using downloadUrl
-                logger.info('res OK');
                 const file = await getFile(downloadUrl);
                 if (file) {
                     // Save the file in the main content tree
@@ -138,7 +136,6 @@ async function promoteFloodgatedFiles(spToken, adminPageUri, projectExcelPath) {
                     }
                 }
             } else {
-                logger.info('res NOT OK');
                 // File does not exist at the destination (main content tree)
                 // File can be copied directly
                 const destinationFolder = `${filePath.substring(0, filePath.lastIndexOf('/'))}`;
