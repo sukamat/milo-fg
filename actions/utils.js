@@ -1,4 +1,7 @@
 const AioLogger = require('@adobe/aio-lib-core-logging');
+const fetch = require('node-fetch');
+
+const MAX_RETRIES = 5;
 
 function getAioLogger(loggerName = 'main', logLevel = 'info') {
     return AioLogger(loggerName, { level: logLevel });
@@ -37,7 +40,46 @@ function getUrlInfo(adminPageUri) {
     return urlInfo;
 }
 
+// eslint-disable-next-line default-param-last
+async function simulatePreview(path, retryAttempt = 1, isFloodgate, adminPageUri) {
+    const previewStatus = { success: true, path };
+    try {
+        const urlInfo = getUrlInfo(adminPageUri);
+        const repo = isFloodgate ? `${urlInfo.repo}-pink` : urlInfo.repo;
+        const previewUrl = `https://admin.hlx.page/preview/${urlInfo.owner}/${repo}/${urlInfo.ref}${path}`;
+        const response = await fetch(
+            `${previewUrl}`,
+            { method: 'POST' },
+        );
+        if (!response.ok && retryAttempt <= MAX_RETRIES) {
+            await simulatePreview(path, retryAttempt + 1, isFloodgate, adminPageUri);
+        }
+        previewStatus.responseJson = await response.json();
+    } catch (error) {
+        previewStatus.success = false;
+    }
+    return previewStatus;
+}
+
+function handleExtension(path) {
+    if (path.endsWith('.xlsx')) {
+        return path.replace('.xlsx', '.json');
+    }
+    return path.substring(0, path.lastIndexOf('.'));
+}
+
+async function getFile(downloadUrl) {
+    const response = await fetch(downloadUrl);
+    if (response) {
+        return response.blob();
+    }
+    return undefined;
+}
+
 module.exports = {
     getAioLogger,
     getUrlInfo,
+    simulatePreview,
+    handleExtension,
+    getFile,
 };

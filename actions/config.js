@@ -5,8 +5,6 @@ const FLOODGATE_CONFIG = '/drafts/floodgate/configs/config.json';
 const GRAPH_API = 'https://graph.microsoft.com/v1.0';
 
 function getSharepointConfig(config) {
-    const logger = getAioLogger();
-    logger.info('inside getSharepointConfig');
     const sharepointConfig = config.sp.data[0];
     // ${sharepointConfig.site} - MS Graph API Url with site pointers.
     const baseURI = `${sharepointConfig.site}/drive/root:${sharepointConfig.rootFolders}`;
@@ -100,10 +98,7 @@ function getHelixAdminConfig() {
 
 async function getConfig(adminPageUri) {
     const logger = getAioLogger();
-    logger.info('inside get config');
     const urlInfo = getUrlInfo(adminPageUri);
-    logger.info('after getUrlInfo call');
-    logger.info(urlInfo);
     if (urlInfo.isValid()) {
         const configPath = `${urlInfo.origin}${FLOODGATE_CONFIG}`;
         logger.info(`config path:: ${configPath}`);
