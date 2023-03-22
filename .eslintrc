@@ -3,43 +3,15 @@
         "airbnb-base"
     ],
     "rules": {
-        "indent": [
-            "error",
-            4,
-            {
-                "SwitchCase": 1
-            }
-        ],
-        "no-param-reassign": [
-            "error",
-            {
-                "props": false
-            }
-        ],
+        "indent": ["error", 4, {"SwitchCase": 1}],
+        "no-param-reassign": ["error", { "props": false }],
         "class-methods-use-this": "off",
-        "function-paren-newline": [
-            "error",
-            "consistent"
-        ],
-        "max-len": [
-            "error",
-            {
-                "code": 200
-            }
-        ],
-        "operator-linebreak": [
-            "error",
-            "after"
-        ],
+        "function-paren-newline": ["error", "consistent"],
+        "max-len": ["error", { "code": 200 }],
+        "operator-linebreak": ["error", "after"],
         "node/no-unpublished-require": 0,
-        "semi": [
-            "error",
-            "always"
-        ],
-        "comma-dangle": [
-            "error",
-            "only-multiline"
-        ],
+        "semi": ["error", "always"],
+        "comma-dangle": ["error", "only-multiline"],
         "space-before-function-paren": [
             "error",
             {
@@ -48,16 +20,14 @@
                 "asyncArrow": "always"
             }
         ],
-        "no-undef": [
-            "error"
-        ],
+        "no-undef": ["error"],
         "no-use-before-define": "off" //temporary to eslint changes better visible in PR (without code reordering)
     },
     "overrides": [
         {
             "files": [
-                "*.test.js",
-                "jest.setup.js"
+              "*.test.js",
+              "jest.setup.js"
             ],
             "rules": {
                 "no-underscore-dangle": "off"
