@@ -28,15 +28,13 @@ async function main(params) {
     const logger = getAioLogger();
     let payload;
     try {
-        const { spToken } = params;
-        const { adminPageUri } = params;
-        const { projectExcelPath } = params;
+        const { spToken, adminPageUri, projectExcelPath } = params;
         logger.info(spToken);
         logger.info(adminPageUri);
         logger.info(projectExcelPath);
 
         if (!spToken || !adminPageUri || !projectExcelPath) {
-            payload = 'Required data not available to proceed.';
+            payload = 'Required data is not available to proceed with FG Promote action.';
             logger.error(payload);
         } else {
             logger.info('Getting all files to be promoted');
@@ -173,6 +171,7 @@ async function promoteFloodgatedFiles(spToken, adminPageUri, projectExcelPath) {
         allFloodgatedFiles.map((file) => promoteFile(file.fileDownloadUrl, file.filePath)),
     );
     const endPromote = new Date();
+    logger.info('Completed promoting all documents in the pink folder');
 
     logger.info('Previewing promoted files.');
     const previewStatuses = await Promise.all(
@@ -180,7 +179,7 @@ async function promoteFloodgatedFiles(spToken, adminPageUri, projectExcelPath) {
             .filter((status) => status.success)
             .map((status) => simulatePreview(handleExtension(status.srcPath), 1, false, adminPageUri)),
     );
-    logger.info('Completed Preview for promoted files.');
+    logger.info('Completed generating Preview for promoted files.');
 
     const failedPromotes = promoteStatuses.filter((status) => !status.success)
         .map((status) => status.srcPath || 'Path Info Not available');
@@ -194,10 +193,10 @@ async function promoteFloodgatedFiles(spToken, adminPageUri, projectExcelPath) {
     if (failedPromotes.length > 0 || failedPreviews.length > 0) {
         logger.info('Error occurred when promoting floodgated content. Check project excel sheet for additional information.');
     } else {
-        logger.info('Promoted floodgate tree successfully. Reloading page... please wait.');
+        logger.info('Promoted floodgate tree successfully.');
     }
 
-    return 'promotion completed';
+    return 'All tasks for Floodgate Promote completed';
 }
 
 exports.main = main;
