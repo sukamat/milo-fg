@@ -26,10 +26,7 @@ function getAioLogger(loggerName = 'main', logLevel = 'info') {
 
 function getUrlInfo(adminPageUri) {
     const logger = getAioLogger();
-    logger.info('inside getUrlInfo');
     const location = new URL(adminPageUri);
-    logger.info('after location');
-    logger.info(location);
     function getParam(name) {
         return location.searchParams.get(name);
     }
@@ -41,7 +38,7 @@ function getUrlInfo(adminPageUri) {
     const repo = getParam('repo') || sub[0];
     const ref = getParam('ref') || 'main';
 
-    logger.info(`sp::${sp}::owner::${owner}::repo::${repo}::ref::${ref}`);
+    logger.info(`sp:: ${sp} :: owner :: ${owner} :: repo :: ${repo} :: ref :: ${ref}`);
 
     const urlInfo = {
         sp,
@@ -53,7 +50,6 @@ function getUrlInfo(adminPageUri) {
             return sp && owner && repo && ref;
         },
     };
-    logger.info('exiting getUrlInfo');
     return urlInfo;
 }
 
@@ -78,6 +74,15 @@ async function simulatePreview(path, retryAttempt = 1, isFloodgate, adminPageUri
     return previewStatus;
 }
 
+function getFloodgateUrl(url) {
+    if (!url) {
+        return undefined;
+    }
+    const urlArr = url.split('--');
+    urlArr[1] += '-pink';
+    return urlArr.join('--');
+}
+
 function handleExtension(path) {
     if (path.endsWith('.xlsx')) {
         return path.replace('.xlsx', '.json');
@@ -96,6 +101,7 @@ async function getFile(downloadUrl) {
 module.exports = {
     getAioLogger,
     getUrlInfo,
+    getFloodgateUrl,
     simulatePreview,
     handleExtension,
     getFile,
