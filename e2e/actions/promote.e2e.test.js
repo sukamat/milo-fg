@@ -15,17 +15,18 @@
 * from Adobe.
 ************************************************************************* */
 
-const utils = require('../actions/utils');
+const { Config } = require('@adobe/aio-sdk').Core;
+const fetch = require('node-fetch');
 
-test('interface', () => {
-    expect(typeof utils.handleExtension).toBe('function');
-});
+// get action url
+const namespace = Config.get('runtime.namespace');
+const hostname = Config.get('cna.hostname') || 'adobeioruntime.net';
+const runtimePackage = 'milo-fg';
+const actionUrl = `https://${namespace}.${hostname}/api/v1/web/${runtimePackage}/promote`;
 
-describe('handleExtension', () => {
-    test('docx path', () => {
-        expect(utils.handleExtension('/path/to/file.docx')).toEqual('/path/to/file');
-    });
-    test('xlsx path', () => {
-        expect(utils.handleExtension('/path/to/file.xlsx')).toEqual('/path/to/file.json');
-    });
+test('returns a 204 as promote calls async promote-worker action', async () => {
+    const res = await fetch(actionUrl);
+    expect(res).toEqual(expect.objectContaining({
+        status: 204
+    }));
 });

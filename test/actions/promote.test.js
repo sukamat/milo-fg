@@ -15,17 +15,29 @@
 * from Adobe.
 ************************************************************************* */
 
-const utils = require('../actions/utils');
+jest.mock('@adobe/aio-sdk', () => ({
+    Core: {
+        Logger: jest.fn()
+    }
+}));
 
-test('interface', () => {
-    expect(typeof utils.handleExtension).toBe('function');
+const { Core } = require('@adobe/aio-sdk');
+
+const mockLoggerInstance = { info: jest.fn(), debug: jest.fn(), error: jest.fn() };
+Core.Logger.mockReturnValue(mockLoggerInstance);
+
+jest.mock('node-fetch');
+const action = require('../../actions/promote/promote');
+
+beforeEach(() => {
+    Core.Logger.mockClear();
+    mockLoggerInstance.info.mockReset();
+    mockLoggerInstance.debug.mockReset();
+    mockLoggerInstance.error.mockReset();
 });
 
-describe('handleExtension', () => {
-    test('docx path', () => {
-        expect(utils.handleExtension('/path/to/file.docx')).toEqual('/path/to/file');
-    });
-    test('xlsx path', () => {
-        expect(utils.handleExtension('/path/to/file.xlsx')).toEqual('/path/to/file.json');
+describe('promote', () => {
+    test('main should be defined', () => {
+        expect(action.main).toBeInstanceOf(Function);
     });
 });
