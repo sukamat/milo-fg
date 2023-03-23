@@ -1,4 +1,4 @@
-# milofg
+# milo-fg
 
 Welcome to Milo Floodgate Adobe I/O Application!
 
