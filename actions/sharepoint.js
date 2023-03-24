@@ -18,11 +18,11 @@
 const { Headers } = require('node-fetch');
 const fetch = require('node-fetch');
 const { getConfig } = require('./config');
-const { getAioLogger } = require('./utils');
+
+const BATCH_REQUEST_LIMIT = 20;
 
 // eslint-disable-next-line default-param-last
 function getAuthorizedRequestOption(spToken, { body = null, json = true, method = 'GET' } = {}) {
-    const logger = getAioLogger();
     const bearer = `Bearer ${spToken}`;
     const headers = new Headers();
     headers.append('Authorization', bearer);
@@ -40,9 +40,40 @@ function getAuthorizedRequestOption(spToken, { body = null, json = true, method 
         options.body = typeof body === 'string' ? body : JSON.stringify(body);
     }
 
-    logger.info(JSON.stringify(options));
-
     return options;
+}
+
+const loadSharepointData = (spToken, spBatchApi, payload) => {
+    const options = getAuthorizedRequestOption(spToken, { method: 'POST' });
+    options.body = JSON.stringify(payload);
+    return fetch(spBatchApi, options);
+};
+
+function getSharepointFileRequest(spConfig, fileIndex, filePath, isFloodgate) {
+    const baseURI = isFloodgate ? spConfig.api.file.get.fgBaseURI : spConfig.api.file.get.baseURI;
+    return {
+        id: fileIndex,
+        url: `${baseURI}${filePath}`.replace(spConfig.api.url, ''),
+        method: 'GET',
+    };
+}
+
+async function getSpFiles(spToken, adminPageUri, filePaths, isFloodgate) {
+    let index = 0;
+    const spFilePromises = [];
+    const { sp } = await getConfig(adminPageUri);
+    const spBatchApi = `${sp.api.batch.uri}`;
+
+    while (index < filePaths.length) {
+        const payload = { requests: [] };
+        for (let i = 0; i < BATCH_REQUEST_LIMIT && index < filePaths.length; index += 1, i += 1) {
+            const filePath = filePaths[index];
+            payload.requests.push(getSharepointFileRequest(sp, index, filePath, isFloodgate));
+        }
+        spFilePromises.push(loadSharepointData(spToken, spBatchApi, payload));
+    }
+    const spFileResponses = await Promise.all(spFilePromises);
+    return Promise.all(spFileResponses.map((file) => file.json()));
 }
 
 async function getFile(doc) {
@@ -243,7 +274,9 @@ async function updateExcelTable(spToken, adminPageUri, excelPath, tableName, val
 
 module.exports = {
     getAuthorizedRequestOption,
+    getSpFiles,
     getFile,
+    copyFile,
     saveFile,
     createFolder,
     updateExcelTable,

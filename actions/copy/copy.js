@@ -26,7 +26,7 @@ function main(args) {
     try {
         const ow = openwhisk();
         return ow.actions.invoke({
-            name: 'milo-fg/promote-worker',
+            name: 'milo-fg/copy-worker',
             blocking: false, // this is the flag that instructs to execute the worker asynchronous
             result: false,
             params: args

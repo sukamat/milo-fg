@@ -93,7 +93,6 @@ function getSharepointConfig(config) {
 
 async function fetchConfigJson(configPath) {
     const logger = getAioLogger();
-    logger.info('inside fetch config json');
     const configResponse = await fetch(configPath);
     if (!configResponse.ok) {
         logger.error('Config not found');
@@ -102,8 +101,6 @@ async function fetchConfigJson(configPath) {
 }
 
 function getHelixAdminConfig() {
-    const logger = getAioLogger();
-    logger.info('inside getHelixAdminConfig');
     const adminServerURL = 'https://admin.hlx.page';
     return {
         api: {
@@ -114,13 +111,10 @@ function getHelixAdminConfig() {
 }
 
 async function getConfig(adminPageUri) {
-    const logger = getAioLogger();
     const urlInfo = getUrlInfo(adminPageUri);
     if (urlInfo.isValid()) {
         const configPath = `${urlInfo.origin}${FLOODGATE_CONFIG}`;
-        logger.info(`config path:: ${configPath}`);
         const configJson = await fetchConfigJson(configPath);
-        logger.info(JSON.stringify(configJson));
         return {
             sp: getSharepointConfig(configJson),
             admin: getHelixAdminConfig(),

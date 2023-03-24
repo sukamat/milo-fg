@@ -29,10 +29,6 @@ async function main(params) {
     let payload;
     try {
         const { spToken, adminPageUri, projectExcelPath } = params;
-        logger.info(spToken);
-        logger.info(adminPageUri);
-        logger.info(projectExcelPath);
-
         if (!spToken || !adminPageUri || !projectExcelPath) {
             payload = 'Required data is not available to proceed with FG Promote action.';
             logger.error(payload);
@@ -51,13 +47,13 @@ async function main(params) {
     };
 }
 
+/**
+ * Find all files in the pink tree to promote.
+ */
 async function findAllFiles(spToken, adminPageUri) {
-    const logger = getAioLogger();
     const { sp } = await getConfig(adminPageUri);
     const baseURI = `${sp.api.excel.update.fgBaseURI}`;
     const rootFolder = baseURI.split('/').pop();
-    logger.info(`baseURI:: ${baseURI}`);
-    logger.info(`rootFolder:: ${rootFolder}`);
     const options = getAuthorizedRequestOption(spToken, { method: 'GET' });
 
     return findAllFloodgatedFiles(baseURI, options, rootFolder, [], ['']);
@@ -98,9 +94,6 @@ async function findAllFloodgatedFiles(baseURI, options, rootFolder, fgFiles, fgF
  * Creates intermediate folders if needed.
  */
 async function promoteCopy(spToken, adminPageUri, srcPath, destinationFolder) {
-    const logger = getAioLogger();
-    logger.info(`promoteCopy::${srcPath} --- ${destinationFolder}`);
-
     await createFolder(spToken, adminPageUri, destinationFolder);
     const { sp } = await getConfig(adminPageUri);
     const destRootFolder = `${sp.api.file.copy.baseURI}`.split('/').pop();
