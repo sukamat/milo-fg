@@ -22,21 +22,29 @@ const { getAioLogger } = require('../utils');
 // This returns the activation ID of the action that it called
 function main(args) {
     const logger = getAioLogger();
-    let ret = 'error';
+    let payload;
     try {
-        const ow = openwhisk();
-        return ow.actions.invoke({
-            name: 'milo-fg/promote-worker',
-            blocking: false, // this is the flag that instructs to execute the worker asynchronous
-            result: false,
-            params: args
-        });
+        const { spToken, adminPageUri, projectExcelPath } = args;
+        if (!spToken || !adminPageUri || !projectExcelPath) {
+            payload = 'Required data is not available to proceed with FG Promote action.';
+            logger.error(payload);
+        } else {
+            const ow = openwhisk();
+            return ow.actions.invoke({
+                name: 'milo-fg/promote-worker',
+                blocking: false, // this is the flag that instructs to execute the worker asynchronous
+                result: false,
+                params: args
+            });
+        }
     } catch (err) {
         logger.error(err);
-        ret = err;
+        payload = err;
     }
 
-    return ret;
+    return {
+        body: payload,
+    };
 }
 
 exports.main = main;
