@@ -55,12 +55,14 @@ async function floodgateContent(spToken, adminPageUri, projectExcelPath, project
 
     async function copyFilesToFloodgateTree(urlInfo) {
         const status = { success: false };
+        if (!urlInfo?.doc) return status;
+
         try {
             const srcPath = urlInfo.doc.filePath;
             logger.info(`Copying ${srcPath} to pink folder`);
 
             let copySuccess = false;
-            if (urlInfo.doc.fg && urlInfo.doc.fg.sp && urlInfo.doc.fg.sp.status !== 200) {
+            if (urlInfo.doc.fg?.sp?.status !== 200) {
                 const destinationFolder = `${srcPath.substring(0, srcPath.lastIndexOf('/'))}`;
                 copySuccess = await copyFile(spToken, adminPageUri, srcPath, destinationFolder, undefined, true);
             } else {
