@@ -47,5 +47,11 @@
         "node": true,
         "es6": true,
         "jest": true
+    },
+    "parser": "@babel/eslint-parser",
+    "parserOptions": {
+        "allowImportExportEverywhere": true,
+        "sourceType": "module",
+        "requireConfigFile": false
     }
 }
