@@ -98,6 +98,29 @@ async function getFile(downloadUrl) {
     return undefined;
 }
 
+function getPathFromUrl(url) {
+    return new URL(url).pathname;
+}
+
+function getDocPathFromUrl(url) {
+    let path = getPathFromUrl(url);
+    if (!path) {
+        return undefined;
+    }
+    if (path.endsWith('.json')) {
+        path = path.slice(0, -5);
+        return `${path}.xlsx`;
+    }
+
+    if (path.endsWith('/')) {
+        path += 'index';
+    } else if (path.endsWith('.html')) {
+        path = path.slice(0, -5);
+    }
+
+    return `${path}.docx`;
+}
+
 module.exports = {
     getAioLogger,
     getUrlInfo,
@@ -105,4 +128,5 @@ module.exports = {
     simulatePreview,
     handleExtension,
     getFile,
+    getDocPathFromUrl
 };
