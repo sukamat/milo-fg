@@ -1,0 +1,36 @@
+application:
+  actions: actions
+  web: web-src
+  runtimeManifest:
+    packages:
+      milo-fg:
+        license: Apache-2.0
+        actions:
+          copy:
+            function: actions/copy/copy.js
+            web: 'yes'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
+          copy-worker:
+            function: actions/copy/worker.js
+            web: 'no'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
+            limits:
+              timeout: 3600000
+          promote:
+            function: actions/promote/promote.js
+            web: 'yes'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
+          promote-worker:
+            function: actions/promote/worker.js
+            web: 'no'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
+            limits:
+              timeout: 3600000
