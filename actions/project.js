@@ -56,7 +56,7 @@ async function getProjectDetails(adminPageUri, projectExcelPath) {
 async function readProjectFile(projectWebUrl) {
     const resp = await fetch(projectWebUrl, { cache: 'no-store' });
     const json = await resp.json();
-    if (json && json.filepaths && json.filepaths.data) {
+    if (json?.urls?.data) {
         return json;
     }
     return undefined;
