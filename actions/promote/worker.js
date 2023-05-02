@@ -15,14 +15,15 @@
 * from Adobe.
 ************************************************************************* */
 
-const fetch = require('node-fetch');
 const { getConfig } = require('../config');
 const {
-    getAuthorizedRequestOption, createFolder, saveFile, updateExcelTable
+    getAuthorizedRequestOption, createFolder, saveFile, updateExcelTable, fetchWithRetry
 } = require('../sharepoint');
 const {
     getAioLogger, simulatePreview, handleExtension, getFile
 } = require('../utils');
+
+const MAX_CHILDREN = 1000;
 
 async function main(params) {
     const logger = getAioLogger();
@@ -63,9 +64,9 @@ async function findAllFiles(spToken, adminPageUri) {
  */
 async function findAllFloodgatedFiles(baseURI, options, rootFolder, fgFiles, fgFolders) {
     while (fgFolders.length !== 0) {
-        const uri = `${baseURI}${fgFolders.shift()}:/children`;
+        const uri = `${baseURI}${fgFolders.shift()}:/children?$top=${MAX_CHILDREN}`;
         // eslint-disable-next-line no-await-in-loop
-        const res = await fetch(uri, options);
+        const res = await fetchWithRetry(uri, options);
         if (res.ok) {
             // eslint-disable-next-line no-await-in-loop
             const json = await res.json();
@@ -102,13 +103,13 @@ async function promoteCopy(spToken, adminPageUri, srcPath, destinationFolder) {
     });
 
     // copy source is the pink directory for promote
-    const copyStatusInfo = await fetch(`${sp.api.file.copy.fgBaseURI}${srcPath}:/copy`, options);
+    const copyStatusInfo = await fetchWithRetry(`${sp.api.file.copy.fgBaseURI}${srcPath}:/copy`, options);
     const statusUrl = copyStatusInfo.headers.get('Location');
     let copySuccess = false;
     let copyStatusJson = {};
     while (statusUrl && !copySuccess && copyStatusJson.status !== 'failed') {
         // eslint-disable-next-line no-await-in-loop
-        const status = await fetch(statusUrl);
+        const status = await fetchWithRetry(statusUrl);
         if (status.ok) {
             // eslint-disable-next-line no-await-in-loop
             copyStatusJson = await status.json();
@@ -128,7 +129,7 @@ async function promoteFloodgatedFiles(spToken, adminPageUri, projectExcelPath) {
             logger.info(`Promoting ${filePath}`);
             const { sp } = await getConfig(adminPageUri);
             const options = getAuthorizedRequestOption(spToken);
-            const res = await fetch(`${sp.api.file.get.baseURI}${filePath}`, options);
+            const res = await fetchWithRetry(`${sp.api.file.get.baseURI}${filePath}`, options);
             if (res.ok) {
                 // File exists at the destination (main content tree)
                 // Get the file in the pink directory using downloadUrl
