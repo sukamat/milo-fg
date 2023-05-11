@@ -22,7 +22,7 @@ const {
     getAuthorizedRequestOption, createFolder, saveFile, updateExcelTable, getFileUsingDownloadUrl
 } = require('../sharepoint');
 const {
-    getAioLogger, simulatePreview, handleExtension, , updateStatusToStateLib, PROMOTE_ACTION
+    getAioLogger, simulatePreview, handleExtension, updateStatusToStateLib, PROMOTE_ACTION
 } = require('../utils');
 
 const BATCH_REQUEST_PROMOTE = 20;
