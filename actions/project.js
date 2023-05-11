@@ -21,6 +21,13 @@ const {
     getAioLogger, getUrlInfo, handleExtension, getFloodgateUrl, getDocPathFromUrl
 } = require('./utils');
 
+const PROJECT_STATUS = {
+    NOT_STARTED: 'NOT STARTED',
+    COMPLETED: 'COMPLETED',
+    COMPLETED_WITH_ERROR: 'COMPLETED WITH ERROR',
+    IN_PROGRESS: 'IN PROGRESS'
+};
+
 async function getProjectDetails(adminPageUri, projectExcelPath) {
     const logger = getAioLogger();
     logger.info('Getting paths from project excel worksheet');
@@ -29,8 +36,9 @@ async function getProjectDetails(adminPageUri, projectExcelPath) {
     const projectUrl = `${urlInfo.origin}${handleExtension(projectExcelPath)}`;
     const projectFileJson = await readProjectFile(projectUrl);
     if (!projectFileJson) {
-        logger.error('Could not read the project excel JSON');
-        return {};
+        const errorMessage = 'Could not read the project excel JSON';
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
     }
 
     const urlsData = projectFileJson.urls.data;
@@ -91,8 +99,9 @@ function injectSharepointData(projectUrls, filePaths, docPaths, spFiles, isFlood
 async function updateProjectWithDocs(spToken, adminPageUri, projectDetail) {
     const logger = getAioLogger();
     if (!projectDetail || !projectDetail.filePaths) {
-        logger.error('Error occurred when injecting sharepoint data');
-        return;
+        const errorMessage = 'Error occurred when injecting sharepoint data';
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
     }
     const { filePaths } = projectDetail;
     const docPaths = [...filePaths.keys()];
@@ -105,4 +114,5 @@ async function updateProjectWithDocs(spToken, adminPageUri, projectDetail) {
 module.exports = {
     getProjectDetails,
     updateProjectWithDocs,
+    PROJECT_STATUS
 };

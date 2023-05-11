@@ -16,7 +16,20 @@
 ************************************************************************* */
 
 const AioLogger = require('@adobe/aio-lib-core-logging');
+const stateLib = require('@adobe/aio-lib-state');
 const fetch = require('node-fetch');
+const crypto = require('crypto');
+
+const STATUS_FORMAT = {
+    action: {
+        type: '',
+        status: '',
+        message: '',
+        activationId: ''
+    }
+};
+const COPY_ACTION = 'copyAction';
+const PROMOTE_ACTION = 'promoteAction';
 
 const MAX_RETRIES = 5;
 
@@ -113,11 +126,85 @@ function getDocPathFromUrl(url) {
     return `${path}.docx`;
 }
 
+async function updateStatusToStateLib(storeKey, status, statusMessage, activationId, action) {
+    const logger = getAioLogger();
+    try {
+        getStatusFromStateLib(storeKey).then((result) => {
+            if (result?.action) {
+                const storeValue = result;
+                if (status) {
+                    storeValue.action.status = status;
+                }
+                if (statusMessage) {
+                    storeValue.action.message = statusMessage;
+                }
+                if (activationId) {
+                    storeValue.action.activationId = activationId;
+                }
+                logger.info(`Updating status to state store  -- value :   ${JSON.stringify(storeValue)}`);
+                updateStateStatus(storeKey, storeValue);
+            } else {
+                const storeStatus = STATUS_FORMAT;
+                logger.info(`Updating status to state store  -- value :   ${JSON.stringify(storeStatus)}`);
+                storeStatus.action.type = action;
+                storeStatus.action.status = status;
+                storeStatus.action.message = statusMessage;
+                storeStatus.action.activationId = activationId;
+                updateStateStatus(storeKey, storeStatus);
+            }
+        });
+    } catch (err) {
+        logger.error(`Error creating state store ${err}`);
+    }
+}
+
+async function updateStateStatus(storeKey, storeValue) {
+    const logger = getAioLogger();
+    const hash = crypto.createHash('md5').update(storeKey).digest('hex');
+    logger.info(`Adding status to aio state lib with hash -- ${hash} - ${JSON.stringify(storeValue)}`);
+    // get the hash value if its available
+    try {
+        const state = await stateLib.init();
+        // save it
+        await state.put(hash, storeValue, {
+            // 30day expiration...
+            ttl: 2592000
+        });
+    } catch (err) {
+        logger.error(`Error creating state store ${err}`);
+    }
+}
+
+async function getStatusFromStateLib(storeKey) {
+    const logger = getAioLogger();
+    let status;
+    try {
+        // md5 hash of the config file
+        const hash = crypto.createHash('md5').update(storeKey).digest('hex');
+        logger.info(`Project excel path and hash value -- ${storeKey} and ${hash}`);
+        // init when running in an Adobe I/O Runtime action (OpenWhisk) (uses env vars __OW_API_KEY and __OW_NAMESPACE automatically)
+        const state = await stateLib.init();
+        // getting activation id data from io state
+        const res = await state.get(hash); // res = { value, expiration }
+        if (res) {
+            status = res.value;
+            logger.info(`Status from the store ${JSON.stringify(status)}`);
+        }
+    } catch (err) {
+        logger.error(`Error getting data from state store ${err}`);
+    }
+    return status;
+}
+
 module.exports = {
     getAioLogger,
     getUrlInfo,
     getFloodgateUrl,
     simulatePreview,
     handleExtension,
-    getDocPathFromUrl
+    getDocPathFromUrl,
+    updateStatusToStateLib,
+    getStatusFromStateLib,
+    COPY_ACTION,
+    PROMOTE_ACTION
 };

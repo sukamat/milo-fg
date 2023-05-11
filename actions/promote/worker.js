@@ -17,11 +17,12 @@
 
 const fetch = require('node-fetch');
 const { getConfig } = require('../config');
+const { PROJECT_STATUS } = require('../project');
 const {
     getAuthorizedRequestOption, createFolder, saveFile, updateExcelTable, getFileUsingDownloadUrl
 } = require('../sharepoint');
 const {
-    getAioLogger, simulatePreview, handleExtension
+    getAioLogger, simulatePreview, handleExtension, , updateStatusToStateLib, PROMOTE_ACTION
 } = require('../utils');
 
 const BATCH_REQUEST_PROMOTE = 20;
@@ -31,16 +32,26 @@ const MAX_CHILDREN = 1000;
 async function main(params) {
     const logger = getAioLogger();
     let payload;
+    const {
+        spToken, adminPageUri, projectExcelPath, projectRoot
+    } = params;
     try {
-        const { spToken, adminPageUri, projectExcelPath } = params;
-        if (!spToken || !adminPageUri || !projectExcelPath) {
+        if (!projectRoot) {
             payload = 'Required data is not available to proceed with FG Promote action.';
             logger.error(payload);
+        } else if (!spToken || !adminPageUri || !projectExcelPath) {
+            payload = 'Required data is not available to proceed with FG Promote action.';
+            updateStatusToStateLib(projectRoot, PROJECT_STATUS.COMPLETED_WITH_ERROR, payload, undefined, PROMOTE_ACTION);
+            logger.error(payload);
         } else {
-            logger.info('Getting all files to be promoted');
+            payload = 'Getting all files to be promoted';
+            updateStatusToStateLib(projectRoot, PROJECT_STATUS.IN_PROGRESS, payload, undefined, PROMOTE_ACTION);
+            logger.info(payload);
             payload = await promoteFloodgatedFiles(spToken, adminPageUri, projectExcelPath);
+            updateStatusToStateLib(projectRoot, PROJECT_STATUS.COMPLETED, '', undefined, PROMOTE_ACTION);
         }
     } catch (err) {
+        updateStatusToStateLib(projectRoot, PROJECT_STATUS.COMPLETED_WITH_ERROR, err.message, undefined, PROMOTE_ACTION);
         logger.error(err);
         payload = err;
     }
@@ -153,7 +164,9 @@ async function promoteFloodgatedFiles(spToken, adminPageUri, projectExcelPath) {
             status.success = promoteSuccess;
             status.srcPath = filePath;
         } catch (error) {
-            logger.error(`Error occurred when trying to promote files to main content tree ${error.message}`);
+            const errorMessage = `Error occurred when trying to promote files to main content tree ${error.message}`;
+            logger.error(errorMessage);
+            throw new Error(errorMessage, error);
         }
         return status;
     }

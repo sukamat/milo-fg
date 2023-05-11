@@ -15,11 +15,13 @@
 * from Adobe.
 ************************************************************************* */
 
-const { getProjectDetails, updateProjectWithDocs } = require('../project');
+const { getProjectDetails, updateProjectWithDocs, PROJECT_STATUS } = require('../project');
 const {
     updateExcelTable, getFile, saveFile, copyFile
 } = require('../sharepoint');
-const { getAioLogger, simulatePreview, handleExtension } = require('../utils');
+const {
+    getAioLogger, simulatePreview, handleExtension, updateStatusToStateLib, COPY_ACTION
+} = require('../utils');
 
 const BATCH_REQUEST_COPY = 20;
 const DELAY_TIME_COPY = 3000;
@@ -27,22 +29,40 @@ const DELAY_TIME_COPY = 3000;
 async function main(params) {
     const logger = getAioLogger();
     let payload;
+    const {
+        spToken, adminPageUri, projectExcelPath, projectRoot
+    } = params;
+    let projectPath = `${projectRoot}${projectExcelPath}`;
     try {
-        const { spToken, adminPageUri, projectExcelPath } = params;
-        if (!spToken || !adminPageUri || !projectExcelPath) {
+        if (!projectRoot || !projectExcelPath) {
+            payload = 'Could not determine the project path. Try reloading the page and trigger the action again.';
+            logger.error(payload);
+        } else if (!spToken || !adminPageUri) {
             payload = 'Required data is not available to proceed with FG Copy action.';
+            updateStatusToStateLib(projectPath, PROJECT_STATUS.COMPLETED_WITH_ERROR, payload, undefined, COPY_ACTION);
             logger.error(payload);
         } else {
-            logger.info('Getting all files to be floodgated from the project excel file');
+            projectPath = `${projectRoot}${projectExcelPath}`;
+            payload = 'Getting all files to be floodgated from the project excel file';
+            logger.info(payload);
+            updateStatusToStateLib(projectPath, PROJECT_STATUS.IN_PROGRESS, payload, undefined, COPY_ACTION);
+
             const projectDetail = await getProjectDetails(adminPageUri, projectExcelPath);
 
+            payload = 'Injecting sharepoint data';
             logger.info('Injecting sharepoint data');
+            updateStatusToStateLib(projectPath, PROJECT_STATUS.IN_PROGRESS, payload, undefined, COPY_ACTION);
             await updateProjectWithDocs(spToken, adminPageUri, projectDetail);
 
+            payload = 'Start floodgating content';
             logger.info('Start floodgating content');
+            updateStatusToStateLib(projectPath, PROJECT_STATUS.IN_PROGRESS, payload, undefined, COPY_ACTION);
             payload = await floodgateContent(spToken, adminPageUri, projectExcelPath, projectDetail);
+
+            updateStatusToStateLib(projectPath, PROJECT_STATUS.COMPLETED, undefined, undefined, COPY_ACTION);
         }
     } catch (err) {
+        updateStatusToStateLib(projectPath, PROJECT_STATUS.COMPLETED_WITH_ERROR, err.message, undefined, COPY_ACTION);
         logger.error(err);
         payload = err;
     }
@@ -130,7 +150,9 @@ async function floodgateContent(spToken, adminPageUri, projectExcelPath, project
     logger.info('Project excel file updated with copy status.');
 
     if (failedCopies.length > 0 || failedPreviews.length > 0) {
-        logger.info('Error occurred when floodgating content. Check project excel sheet for additional information.');
+        const errorMessage = 'Error occurred when floodgating content. Check project excel sheet for additional information.';
+        logger.info(errorMessage);
+        throw new Error(errorMessage);
     } else {
         logger.info('Copied content to floodgate tree successfully.');
     }
