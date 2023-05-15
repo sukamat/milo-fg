@@ -51,7 +51,7 @@ async function getFileData(spToken, adminPageUri, filePath, isFloodgate) {
     const { sp } = await getConfig(adminPageUri);
     const options = getAuthorizedRequestOption(spToken);
     const baseURI = isFloodgate ? sp.api.directory.create.fgBaseURI : sp.api.directory.create.baseURI;
-    const resp = await fetch(`${baseURI}${filePath}`, options);
+    const resp = await fetchWithRetry(`${baseURI}${filePath}`, options);
     const json = await resp.json();
     return json;
 }
