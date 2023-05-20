@@ -51,8 +51,6 @@ function getUrlInfo(adminPageUri) {
     const repo = getParam('repo') || sub[0];
     const ref = getParam('ref') || 'main';
 
-    logger.info(`sp:: ${sp} :: owner :: ${owner} :: repo :: ${repo} :: ref :: ${ref}`);
-
     const urlInfo = {
         sp,
         owner,
