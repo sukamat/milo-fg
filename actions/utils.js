@@ -38,7 +38,6 @@ function getAioLogger(loggerName = 'main', logLevel = 'info') {
 }
 
 function getUrlInfo(adminPageUri) {
-    const logger = getAioLogger();
     const location = new URL(adminPageUri);
     function getParam(name) {
         return location.searchParams.get(name);
