@@ -23,6 +23,7 @@ const {
     getAioLogger, simulatePreviewPublish, handleExtension, updateStatusToStateLib, COPY_ACTION, delay, PREVIEW, logMemUsage
 } = require('../utils');
 const appConfig = require('../appConfig');
+const urlInfo = require('../urlInfo');
 
 const BATCH_REQUEST_COPY = 20;
 const DELAY_TIME_COPY = 3000;
@@ -45,21 +46,22 @@ async function main(params) {
             updateStatusToStateLib(projectPath, PROJECT_STATUS.FAILED, payload, undefined, COPY_ACTION);
             logger.error(payload);
         } else {
+            urlInfo.setUrlInfo(adminPageUri);
             payload = 'Getting all files to be floodgated from the project excel file';
             logger.info(payload);
             updateStatusToStateLib(projectPath, PROJECT_STATUS.IN_PROGRESS, payload, undefined, COPY_ACTION);
 
-            const projectDetail = await getProjectDetails(adminPageUri, projectExcelPath);
+            const projectDetail = await getProjectDetails(projectExcelPath);
 
             payload = 'Injecting sharepoint data';
             logger.info(payload);
             updateStatusToStateLib(projectPath, PROJECT_STATUS.IN_PROGRESS, payload, undefined, COPY_ACTION);
-            await updateProjectWithDocs(adminPageUri, projectDetail);
+            await updateProjectWithDocs(projectDetail);
 
             payload = 'Start floodgating content';
             logger.info(payload);
             updateStatusToStateLib(projectPath, PROJECT_STATUS.IN_PROGRESS, payload, undefined, COPY_ACTION);
-            payload = await floodgateContent(adminPageUri, projectExcelPath, projectDetail);
+            payload = await floodgateContent(projectExcelPath, projectDetail);
 
             updateStatusToStateLib(projectPath, PROJECT_STATUS.COMPLETED, payload, undefined, COPY_ACTION);
         }
@@ -74,29 +76,29 @@ async function main(params) {
     };
 }
 
-async function floodgateContent(adminPageUri, projectExcelPath, projectDetail) {
+async function floodgateContent(projectExcelPath, projectDetail) {
     const logger = getAioLogger();
     logger.info('Floodgating content started.');
 
-    async function copyFilesToFloodgateTree(urlInfo) {
+    async function copyFilesToFloodgateTree(fileInfo) {
         const status = { success: false };
-        if (!urlInfo?.doc) return status;
+        if (!fileInfo?.doc) return status;
 
         try {
-            const srcPath = urlInfo.doc.filePath;
+            const srcPath = fileInfo.doc.filePath;
             logger.info(`Copying ${srcPath} to pink folder`);
 
             let copySuccess = false;
             const destinationFolder = `${srcPath.substring(0, srcPath.lastIndexOf('/'))}`;
-            copySuccess = await copyFile(adminPageUri, srcPath, destinationFolder, undefined, true);
+            copySuccess = await copyFile(srcPath, destinationFolder, undefined, true);
             if (copySuccess === false) {
-                logger.info(`Copy was not success full for ${srcPath} hence alternate opt will be used`);
-                const file = await getFile(urlInfo.doc);
+                logger.info(`Copy was not successful for ${srcPath}. Alternate copy option will be used`);
+                const file = await getFile(fileInfo.doc);
                 if (file) {
-                    const destination = urlInfo.doc.filePath;
+                    const destination = fileInfo.doc.filePath;
                     if (destination) {
                         // Save the file in the floodgate destination location
-                        const saveStatus = await saveFile(adminPageUri, file, destination, true);
+                        const saveStatus = await saveFile(file, destination, true);
                         if (saveStatus.success) {
                             copySuccess = true;
                         }
@@ -105,7 +107,7 @@ async function floodgateContent(adminPageUri, projectExcelPath, projectDetail) {
             }
             status.success = copySuccess;
             status.srcPath = srcPath;
-            status.url = urlInfo.doc.url;
+            status.url = fileInfo.doc.url;
         } catch (error) {
             logger.error(`Error occurred when trying to copy files to floodgated content folder ${error.message}`);
         }
@@ -129,7 +131,7 @@ async function floodgateContent(adminPageUri, projectExcelPath, projectDetail) {
         logMemUsage();
         logger.info(`Batch create folder ${i} in progress`);
         // eslint-disable-next-line no-await-in-loop
-        await bulkCreateFolders(adminPageUri, batchArray[i], true);
+        await bulkCreateFolders(batchArray[i], true);
         logger.info(`Batch copy ${i} in progress`);
         // eslint-disable-next-line no-await-in-loop
         copyStatuses.push(...await Promise.all(
@@ -147,7 +149,7 @@ async function floodgateContent(adminPageUri, projectExcelPath, projectDetail) {
     for (let i = 0; i < copyStatuses.length; i += 1) {
         if (copyStatuses[i].success) {
             // eslint-disable-next-line no-await-in-loop
-            const result = await simulatePreviewPublish(handleExtension(copyStatuses[i].srcPath), PREVIEW, 1, true, adminPageUri);
+            const result = await simulatePreviewPublish(handleExtension(copyStatuses[i].srcPath), PREVIEW, 1, true);
             previewStatuses.push(result);
         }
         // eslint-disable-next-line no-await-in-loop
@@ -160,7 +162,7 @@ async function floodgateContent(adminPageUri, projectExcelPath, projectDetail) {
         .map((status) => status.path);
 
     const excelValues = [['COPY', startCopy, endCopy, failedCopies.join('\n'), failedPreviews.join('\n')]];
-    await updateExcelTable(adminPageUri, projectExcelPath, 'COPY_STATUS', excelValues);
+    await updateExcelTable(projectExcelPath, 'COPY_STATUS', excelValues);
     logger.info('Project excel file updated with copy status.');
 
     if (failedCopies.length > 0 || failedPreviews.length > 0) {

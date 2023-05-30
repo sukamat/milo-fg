@@ -82,8 +82,8 @@ async function isAuthorizedUser(accessToken) {
     return getDriveRoot(accessToken);
 }
 
-async function getFileData(adminPageUri, filePath, isFloodgate) {
-    const { sp } = await getConfig(adminPageUri);
+async function getFileData(filePath, isFloodgate) {
+    const { sp } = await getConfig();
     const options = await getAuthorizedRequestOption();
     const baseURI = isFloodgate ? sp.api.directory.create.fgBaseURI : sp.api.directory.create.baseURI;
     const resp = await fetchWithRetry(`${baseURI}${filePath}`, options);
@@ -93,7 +93,7 @@ async function getFileData(adminPageUri, filePath, isFloodgate) {
     return { fileDownloadUrl, fileSize };
 }
 
-async function getFilesData(adminPageUri, filePaths, isFloodgate) {
+async function getFilesData(filePaths, isFloodgate) {
     const batchArray = [];
     for (let i = 0; i < filePaths.length; i += BATCH_REQUEST_LIMIT) {
         const arrayChunk = filePaths.slice(i, i + BATCH_REQUEST_LIMIT);
@@ -104,7 +104,7 @@ async function getFilesData(adminPageUri, filePaths, isFloodgate) {
     for (let i = 0; i < batchArray.length; i += 1) {
         // eslint-disable-next-line no-await-in-loop
         fileJsonResp.push(...await Promise.all(
-            batchArray[i].map((file) => getFileData(adminPageUri, file, isFloodgate)),
+            batchArray[i].map((file) => getFileData(file, isFloodgate)),
         ));
         // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
         await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_TIME));
@@ -128,8 +128,8 @@ async function getFileUsingDownloadUrl(downloadUrl) {
     return undefined;
 }
 
-async function createFolder(adminPageUri, folder, isFloodgate) {
-    const { sp } = await getConfig(adminPageUri);
+async function createFolder(folder, isFloodgate) {
+    const { sp } = await getConfig();
     const options = await getAuthorizedRequestOption({ method: sp.api.directory.create.method });
     options.body = JSON.stringify(sp.api.directory.create.payload);
 
@@ -242,7 +242,7 @@ async function createSessionAndUploadFile(sp, file, dest, filename, isFloodgate)
  * @param {*} isFloodgate Is floodgate flag
  * @returns Create folder status
  */
-async function bulkCreateFolders(adminPageUri, srcPathList, isFloodgate) {
+async function bulkCreateFolders(srcPathList, isFloodgate) {
     const logger = getAioLogger();
     const createtFolderStatuses = [];
     const allPaths = srcPathList.map((e) => {
@@ -254,7 +254,7 @@ async function bulkCreateFolders(adminPageUri, srcPathList, isFloodgate) {
     // logger.info(`Unique path list ${JSON.stringify(leafPathLst)}`);
     try {
         logger.info('bulkCreateFolders started');
-        const promises = leafPathLst.map((folder) => createFolder(adminPageUri, folder, isFloodgate));
+        const promises = leafPathLst.map((folder) => createFolder(folder, isFloodgate));
         logger.info('Got createfolder promises and waiting....');
         createtFolderStatuses.push(...await Promise.all(promises));
         logger.info(`bulkCreateFolders completed ${createtFolderStatuses?.length}`);
@@ -267,9 +267,9 @@ async function bulkCreateFolders(adminPageUri, srcPathList, isFloodgate) {
     return createtFolderStatuses;
 }
 
-async function copyFile(adminPageUri, srcPath, destinationFolder, newName, isFloodgate, isFloodgateLockedFile) {
+async function copyFile(srcPath, destinationFolder, newName, isFloodgate, isFloodgateLockedFile) {
     const logger = getAioLogger();
-    const { sp } = await getConfig(adminPageUri);
+    const { sp } = await getConfig();
     const { baseURI, fgBaseURI } = sp.api.file.copy;
     const rootFolder = isFloodgate ? fgBaseURI.split('/').pop() : baseURI.split('/').pop();
 
@@ -303,12 +303,12 @@ async function copyFile(adminPageUri, srcPath, destinationFolder, newName, isFlo
     return copySuccess;
 }
 
-async function saveFile(adminPageUri, file, dest, isFloodgate) {
+async function saveFile(file, dest, isFloodgate) {
     try {
         const folder = getFolderFromPath(dest);
         const filename = getFileNameFromPath(dest);
-        await createFolder(adminPageUri, folder, isFloodgate);
-        const { sp } = await getConfig(adminPageUri);
+        await createFolder(folder, isFloodgate);
+        const { sp } = await getConfig();
         let uploadFileStatus = await createSessionAndUploadFile(sp, file, dest, filename, isFloodgate);
         if (uploadFileStatus.locked) {
             await releaseUploadSession(sp, uploadFileStatus.sessionUrl);
@@ -317,7 +317,7 @@ async function saveFile(adminPageUri, file, dest, isFloodgate) {
             const spFileUrl = `${baseURI}${dest}`;
             await renameFile(spFileUrl, lockedFileNewName);
             const newLockedFilePath = `${folder}/${lockedFileNewName}`;
-            const copyFileStatus = await copyFile(adminPageUri, newLockedFilePath, folder, filename, isFloodgate, true);
+            const copyFileStatus = await copyFile(newLockedFilePath, folder, filename, isFloodgate, true);
             if (copyFileStatus) {
                 uploadFileStatus = await createSessionAndUploadFile(sp, file, dest, filename, isFloodgate);
                 if (uploadFileStatus.success) {
@@ -335,8 +335,8 @@ async function saveFile(adminPageUri, file, dest, isFloodgate) {
     return { success: false, path: dest };
 }
 
-async function updateExcelTable(adminPageUri, excelPath, tableName, values) {
-    const { sp } = await getConfig(adminPageUri);
+async function updateExcelTable(excelPath, tableName, values) {
+    const { sp } = await getConfig();
 
     const options = await getAuthorizedRequestOption({
         body: JSON.stringify({ values }),
