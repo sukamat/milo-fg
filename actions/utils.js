@@ -22,6 +22,7 @@ const urlInfo = require('./urlInfo');
 
 const COPY_ACTION = 'copyAction';
 const PROMOTE_ACTION = 'promoteAction';
+const PROMOTE_BATCH = 'promoteBatch';
 const PREVIEW = 'preview';
 const PUBLISH = 'live';
 
@@ -90,8 +91,9 @@ async function delay(milliseconds = 100) {
 async function actInProgress(ow, actId, svInProg = true) {
     const logger = getAioLogger();
     const finStatuses = ['success', 'failure', 'skipped', 'developer_error',
-        'system_error', 'invocation_error', 'application_error', 'timeout'];
-    if (svInProg) {
+        'system_error', 'invocation_error', 'application_error', 'timeout',
+        'action developer error', 'application error'];
+    if (svInProg && actId) {
         let owAct = {};
         try {
             owAct = await ow.activations.get({
@@ -130,6 +132,7 @@ module.exports = {
     delay,
     COPY_ACTION,
     PROMOTE_ACTION,
+    PROMOTE_BATCH,
     PREVIEW,
     PUBLISH,
     logMemUsage,
