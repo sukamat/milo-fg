@@ -18,7 +18,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const openwhisk = require('openwhisk');
 const {
-    getAioLogger, actInProgress, PROMOTE_ACTION
+    getAioLogger, PROMOTE_ACTION
 } = require('../utils');
 const appConfig = require('../appConfig');
 const { isAuthorizedUser } = require('../sharepoint');
@@ -54,32 +54,27 @@ async function main(args) {
 
             // Get Activation Status
             const fgInProg = FgStatus.isInProgress(svStatus);
-            const actId = storeValue?.action?.activationId;
-            const actInProg = await actInProgress(ow, actId, fgInProg);
-
-            // Get Tracker Status - If batch is completed then check tracker as well
-            const trackerActId = storeValue?.action?.batches?.activationId;
-            const trackerInProg = trackerActId && !actInProg ?
-                await actInProgress(ow, trackerActId, fgInProg) : actInProg;
-
             const accountDtls = await isAuthorizedUser(spToken);
             if (!accountDtls) {
                 payload = 'Could not determine the user.';
                 logger.error(payload);
-            } else if (!appConfig.getSkipInProgressCheck() && trackerInProg) {
+            } else if (!appConfig.getSkipInProgressCheck() && fgInProg) {
                 payload = `A promote action project with activationid: ${storeValue?.action?.activationId} is already in progress. 
                 Not triggering this action. And the previous action can be retrieved by refreshing the console page`;
                 storeValue.action.status = FgStatus.PROJECT_STATUS.FAILED;
                 storeValue.action.message = payload;
                 payload = storeValue;
             } else {
+                fgStatus.clearState();
                 payload = await fgStatus.updateStatusToStateLib({
                     status: FgStatus.PROJECT_STATUS.STARTED,
                     statusMessage: 'Triggering promote action',
                     batches: {}
                 });
+                logger.info(`FGStatus store ${await fgStatus.getStatusFromStateLib()}`);
+
                 return ow.actions.invoke({
-                    name: 'milo-fg/promote-batch',
+                    name: 'milo-fg/promote-create-batch',
                     blocking: false, // this is the flag that instructs to execute the worker asynchronous
                     result: false,
                     params: args
@@ -112,7 +107,7 @@ async function main(args) {
         }
     } catch (err) {
         logger.error(err);
-        payload = fgStatus.updateStatusToStateLib({
+        payload = await fgStatus.updateStatusToStateLib({
             status: FgStatus.PROJECT_STATUS.FAILED,
             statusMessage: `Failed to invoke actions ${err.message}`
         });

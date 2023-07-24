@@ -17,12 +17,13 @@
  ************************************************************************* */
 
 const { getAioLogger } = require('./utils');
+const appConfig = require('./appConfig');
 
 const logger = getAioLogger();
 
-const NUM_BATCH_FILES = 10;
 const FOLDER_PREFIX = 'batch';
-const FILE_METADATA_JSON = 'batchfiles_metadata.json';
+const BATCH_INFO_FILE = 'batch_info.json';
+const RESULTS_FILE = 'results.json';
 
 /**
  * Holds the batch related information like the path where the batch specific files are stored
@@ -38,12 +39,12 @@ class Batch {
     constructor(params) {
         this.params = params;
         this.filesSdk = params.filesSdk;
-        this.filesSdkPath = params.filesSdkPath;
+        this.instancePath = params.instancePath;
         this.batchNumber = params?.batchNumber || 1;
-        this.numBatchFiles = params?.numBatchFiles || NUM_BATCH_FILES;
-        this.batchPath = `${this.filesSdkPath}/${FOLDER_PREFIX}_${this.batchNumber}`;
-        this.batchCollFilePath = `${this.batchPath}/${FILE_METADATA_JSON}`;
-        this.manifestFile = `${this.batchPath}/milo_batch_manifest.json`;
+        this.maxFilesPerBatch = appConfig.getBatchConfig().maxFilesPerBatch;
+        this.batchPath = `${this.instancePath}/${FOLDER_PREFIX}_${this.batchNumber}`;
+        this.batchInfoFile = `${this.batchPath}/${BATCH_INFO_FILE}`;
+        this.resultsFile = `${this.batchPath}/${RESULTS_FILE}`;
     }
 
     /**
@@ -64,14 +65,14 @@ class Batch {
      * @returns Checks if the file can be added based on threshold config
      */
     canAddFile() {
-        return this.filesSdk && this.filesSdkPath && this.batchFiles.length < this.numBatchFiles;
+        return this.filesSdk && this.instancePath && this.batchFiles.length < this.maxFilesPerBatch;
     }
 
     /**
      * @param {*} file Add the file metadata informationo to file store e.g. bfile_1.json..
      */
     async addFile(file) {
-        if (this.filesSdk && this.filesSdkPath) {
+        if (this.filesSdk && this.instancePath) {
             const data = { file, batchNumber: this.batchNumber };
             this.batchFiles.push(data);
         }
@@ -83,15 +84,15 @@ class Batch {
     async savePendingFiles() {
         if (!this.filesSdk || !this.batchFiles?.length) return;
         const dataStr = JSON.stringify(this.batchFiles);
-        await this.filesSdk.write(this.batchCollFilePath, dataStr);
-        this.batchCollFilePath = [];
+        await this.filesSdk.write(this.batchInfoFile, dataStr);
+        this.batchInfoFile = [];
     }
 
     async getFiles() {
-        logger.info(`get batch files ${this.filesSdk} and ${this.filesSdkPath}`);
+        logger.info(`get batch files ${this.filesSdk} and ${this.instancePath}`);
         let fileContents = [];
-        if (this.filesSdk && this.filesSdkPath) {
-            const dataStr = await this.filesSdk.read(this.batchCollFilePath);
+        if (this.filesSdk && this.instancePath) {
+            const dataStr = await this.filesSdk.read(this.batchInfoFile);
             fileContents = JSON.parse(dataStr);
         }
         return fileContents;
@@ -100,15 +101,15 @@ class Batch {
     /**
      * @param {*} data Writes to batch metadata e.g. failed previews.
      */
-    async writeToManifest(data) {
-        await this.filesSdk.write(this.manifestFile, JSON.stringify(data));
+    async writeResults(data) {
+        await this.filesSdk.write(this.resultsFile, JSON.stringify(data));
     }
 
     /**
      * @returns Get manifest file content e.g. json for updating status/reporting
      */
-    async getManifestContent() {
-        const buffer = await this.filesSdk.read(this.manifestFile);
+    async getResultsContent() {
+        const buffer = await this.filesSdk.read(this.resultsFile);
         const data = buffer.toString();
         return JSON.parse(data);
     }

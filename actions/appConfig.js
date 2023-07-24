@@ -28,7 +28,7 @@ class AppConfig {
         this.configMap.fgShareUrl = params.fgShareUrl;
         this.configMap.rootFolder = params.rootFolder;
         this.configMap.fgRootFolder = params.fgRootFolder;
-        this.configMap.promoteIgnorePaths = params.promoteIgnorePaths;
+        this.configMap.promoteIgnorePaths = params.promoteIgnorePaths || [];
         this.configMap.clientId = params.clientId;
         this.configMap.tenantId = params.tenantId;
         this.configMap.certPassword = params.certPassword;
@@ -36,8 +36,8 @@ class AppConfig {
         this.configMap.certThumbprint = params.certThumbprint;
         this.configMap.skipInProg = (params.skipInProgressCheck || '').toLowerCase() === 'true';
         this.configMap.batchFilesPath = params.batchFilesPath || 'milo-process/batching';
-        this.configMap.numBatchFiles = parseInt(params.numBatchFiles || '1000', 10);
-        this.configMap.numBulkPerBatch = parseInt(params.numBulkPerBatch || '20', 10);
+        this.configMap.maxFilesPerBatch = parseInt(params.maxFilesPerBatch || '200', 10);
+        this.configMap.numBulkReq = parseInt(params.numBulkReq || '20', 10);
         this.extractPrivateKey();
     }
 
@@ -52,6 +52,11 @@ class AppConfig {
         return {
             clientId, tenantId, certPassword, pvtKey, certThumbprint,
         };
+    }
+
+    getSiteConfig() {
+        const { fgSite, fgRootFolder } = this.configMap;
+        return { fgSite, fgRootFolder };
     }
 
     getFgSite() {
@@ -87,9 +92,12 @@ class AppConfig {
     getBatchConfig() {
         return {
             batchFilesPath: this.configMap.batchFilesPath,
-            numBatchFiles: this.configMap.numBatchFiles,
-            numBulkPerBatch: this.configMap.numBulkPerBatch
+            maxFilesPerBatch: this.configMap.maxFilesPerBatch,
         };
+    }
+
+    getNumBulkReq() {
+        return this.configMap.numBulkReq;
     }
 }
 

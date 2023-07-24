@@ -41,7 +41,7 @@ class FgStatus {
     /**
      * Template that will be populated and stored in state
      */
-    storeStatus = {
+    storeStatusTmpl = {
         action: {
             lastTriggeredBy: '',
             type: '',
@@ -50,9 +50,11 @@ class FgStatus {
             activationId: '',
             startTime: '',
             endTime: '',
-            batches: { actIds: [], tracker: null }
+            batchesInfo: []
         }
     };
+
+    storeStatus = JSON.parse(JSON.stringify(this.storeStatusTmpl));
 
     /**
      * Constructor with initial setup
@@ -178,7 +180,7 @@ class FgStatus {
      * Save the store status object into libstate
      */
     async updateStateStatus() {
-        const hash = crypto.createHash('md5').update(this.storeKey).digest('hex');
+        const hash = this.getHash();
         this.logger.info(`Adding status to aio state lib with hash -- ${hash} - ${JSON.stringify(this.storeStatus)}`);
         // get the hash value if its available
         try {
@@ -190,6 +192,24 @@ class FgStatus {
             });
         } catch (err) {
             this.logger.error(`Error creating state store ${err}`);
+        }
+    }
+
+    getHash() {
+        return crypto.createHash('md5').update(this.storeKey).digest('hex');
+    }
+
+    async clearState(remove) {
+        if (remove) {
+            const hash = this.getHash();
+            try {
+                const state = await stateLib.init();
+                await state.delete(hash);
+            } catch (err) {
+                this.logger.error(`Error deleting from state store ${err}`);
+            }
+        } else {
+            await this.updateStateStatus(this.storeStatusTmpl);
         }
     }
 }

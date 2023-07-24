@@ -99,7 +99,6 @@ async function actInProgress(ow, actId, svInProg = true) {
             owAct = await ow.activations.get({
                 activationId: actId
             });
-            // logger.info(`Job status response for ${actId} is ${JSON.stringify(owAct)}`);
             return owAct?.response?.status ? !finStatuses.includes(owAct.response.status) : svInProg;
         } catch (err) {
             logger.error(err?.stack);
@@ -124,6 +123,10 @@ function logMemUsageIter() {
     setTimeout(() => eventEmitter.emit('logMemUsage'), 400);
 }
 
+function getInstanceKey(params) {
+    return params?.fgRootFolder?.replace(/[^a-zA-Z0-9_]/g, '_') || 'default';
+}
+
 module.exports = {
     getAioLogger,
     simulatePreviewPublish,
@@ -137,5 +140,6 @@ module.exports = {
     PUBLISH,
     logMemUsage,
     logMemUsageIter,
-    actInProgress
+    actInProgress,
+    getInstanceKey
 };

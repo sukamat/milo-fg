@@ -20,8 +20,8 @@ application:
           certKey: $CERT_KEY
           certThumbprint: $CERT_THUMB_PRINT
           batchFilesPath: $BATCH_FILES_PATH
-          numBatchFiles: $NUM_BATCH_FILES
-          numBulkPerBatch: $NUM_BULK_PER_BATCH
+          maxFilesPerBatch: $MAX_FILES_PER_BATCH
+          numBulkReq: $NUM_BULK_REQUEST
         actions:
           copy:
             function: actions/copy/copy.js
@@ -44,15 +44,15 @@ application:
             runtime: nodejs:16
             inputs:
               LOG_LEVEL: debug
-          promote-batch:
-            function: actions/promote/promoteBatch.js
+          promote-create-batch:
+            function: actions/promote/createBatch.js
             web: 'no'
             runtime: nodejs:16
             inputs:
               LOG_LEVEL: debug
             limits:
               timeout: 1900000
-              memory: 1024
+              memory: 1024              
           promote-worker:
             function: actions/promote/worker.js
             web: 'no'
@@ -63,17 +63,32 @@ application:
               timeout: 3600000
               memorySize: 1024
               concurrency: 5
-          promote-tracker:
-            function: actions/promote/tracker.js
+          promote-trigger-n-track:
+            function: actions/promote/triggerNTrack.js
             web: 'no'
             runtime: nodejs:16
             inputs:
               LOG_LEVEL: debug
             limits:
-              timeout: 3600000
+              timeout: 600000
           status:
             function: actions/status/status.js
             web: 'yes'
             runtime: nodejs:16
             inputs:
               LOG_LEVEL: debug
+          maint:
+            function: actions/maint/maint.js
+            web: 'yes'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug              
+        triggers:
+          everyMin:
+            feed: /whisk.system/alarms/interval
+            inputs: 
+              minutes: 1
+        rules:
+          everyMinRule:
+            trigger: everyMin
+            action: promote-trigger-n-track
