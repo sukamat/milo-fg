@@ -45,7 +45,9 @@ class AppConfig {
         this.configMap.batchFilesPath = params.batchFilesPath || 'milo-process/batching';
         this.configMap.maxFilesPerBatch = parseInt(params.maxFilesPerBatch || '200', 10);
         this.configMap.numBulkReq = parseInt(params.numBulkReq || '20', 10);
-        this.configMap.tempAdminKey = params.tempAdminKey;
+        this.configMap.groupCheckUrl = params.groupCheckUrl;
+        this.configMap.fgUserGroups = this.getJsonFromStr(params.fgUserGroups, []);
+        this.configMap.fgAdminGroups = this.getJsonFromStr(params.fgAdminGroups, []);
         this.extractPrivateKey();
     }
 
@@ -55,6 +57,15 @@ class AppConfig {
 
     getPayload() {
         return this.configMap.payload;
+    }
+
+    getJsonFromStr(str, def = {}) {
+        try {
+            return JSON.parse(str);
+        } catch (err) {
+            // Mostly bad string ignored
+        }
+        return def;
     }
 
     /**
@@ -115,10 +126,6 @@ class AppConfig {
 
     getNumBulkReq() {
         return this.configMap.numBulkReq;
-    }
-
-    isAdmin(adminKey) {
-        return adminKey === this.configMap.tempAdminKey;
     }
 }
 
