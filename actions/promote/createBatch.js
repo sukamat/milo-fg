@@ -110,10 +110,10 @@ async function createBatch(batchManager) {
     const baseURI = `${sp.api.excel.update.fgBaseURI}`;
     const rootFolder = baseURI.split('/').pop();
     const options = await getAuthorizedRequestOption({ method: 'GET' });
-    // Temporarily restricting the iteration for promote to under /drafts folder only
     const promoteIgnoreList = appConfig.getPromoteIgnorePaths();
     logger.info(`Promote ignore list: ${promoteIgnoreList}`);
 
+    // Temporarily restricting the iteration for promote to under /drafts folder only
     return findAndBatchFGFiles({
         baseURI,
         options,
