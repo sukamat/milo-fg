@@ -21,6 +21,7 @@ application:
           groupCheckUrl: $GROUP_CHECK_URL
           fgUserGroups: $FG_USER_GROUPS
           fgAdminGroups: $FG_ADMIN_GROUPS
+          fgDirPattern: $FG_DIR_PATTERN
         actions:
           copy:
             function: actions/copy/copy.js
@@ -37,6 +38,18 @@ application:
             limits:
               timeout: 3600000
               memorySize: 2048
+          delete:
+            function: actions/delete/delete.js
+            web: 'yes'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
+          delete-worker:
+            function: actions/delete/worker.js
+            web: 'no'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
           promote:
             function: actions/promote/promote.js
             web: 'yes'
