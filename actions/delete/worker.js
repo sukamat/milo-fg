@@ -31,9 +31,8 @@ async function main(params) {
         adminPageUri, projectExcelPath, rootFolder,
     } = params;
     appConfig.setAppConfig(params);
-    const projectPath = `${rootFolder}${projectExcelPath}`;
     const { fgRootFolder } = appConfig.getPayload();
-    const fgStatus = new FgStatus({ action: DELETE_ACTION, statusKey: `${DELETE_ACTION}~${fgRootFolder}` });
+    const fgStatus = new FgStatus({ action: DELETE_ACTION });
     try {
         if (!rootFolder || !projectExcelPath) {
             payload = 'Could not determine the project path. Try reloading the page and trigger the action again.';
@@ -54,7 +53,7 @@ async function main(params) {
                 statusMessage: payload
             });
 
-            const deleteStatus = await deleteFloodgateDir(fgRootFolder);
+            const deleteStatus = await deleteFloodgateDir();
             payload = deleteStatus === false ?
                 'Error occurred when deleting content. Check project excel sheet for additional information.' :
                 'Delete action was completed';

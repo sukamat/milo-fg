@@ -22,6 +22,7 @@ application:
           fgUserGroups: $FG_USER_GROUPS
           fgAdminGroups: $FG_ADMIN_GROUPS
           fgDirPattern: $FG_DIR_PATTERN
+          siteRootPathRex: $SITE_ROOT_PATH_REX
         actions:
           copy:
             function: actions/copy/copy.js

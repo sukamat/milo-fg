@@ -51,6 +51,9 @@ class AppConfig {
         this.configMap.fgUserGroups = this.getJsonFromStr(params.fgUserGroups, []);
         this.configMap.fgAdminGroups = this.getJsonFromStr(params.fgAdminGroups, []);
         this.configMap.fgDirPattern = params.fgDirPattern;
+        this.configMap.siteRootPathRex = this.siteRootPathRex || '.*/sites(/.*)<';
+        this.configMap.siteRootPath = this.getSiteRootPath(params.shareUrl);
+        this.configMap.siteFgRootPath = this.getSiteRootPath(params.fgShareUrl);
         this.extractPrivateKey();
     }
 
@@ -130,6 +133,14 @@ class AppConfig {
 
     getNumBulkReq() {
         return this.configMap.numBulkReq;
+    }
+
+    getSiteRootPath(shareUrl) {
+        try {
+            return shareUrl.match(new RegExp(this.configMap.siteRootPathRex))[1];
+        } catch (err) {
+            return '/';
+        }
     }
 }
 

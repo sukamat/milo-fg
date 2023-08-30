@@ -49,7 +49,7 @@ async function main(params) {
     });
     const payload = appConfig.getPayload();
 
-    const fgStatus = new FgStatus({ action: PROMOTE_ACTION, statusKey: payload.fgRootFolder });
+    const fgStatus = new FgStatus({ action: PROMOTE_ACTION });
     try {
         if (!payload.fgRootFolder) {
             stepMsg = 'Required data is not available to proceed with FG Promote action.';
@@ -132,10 +132,10 @@ async function checkBatchesInProg(fgRootFolder, actDtls, ow) {
         if (activationId && !done) {
             fgStatus = new FgStatus({
                 action: `${PROMOTE_BATCH}_${batchNumber}`,
-                statusKey: `${fgRootFolder}~Batch_${batchNumber}`
+                keySuffix: `Batch_${batchNumber}`
             });
             batchInProg = await fgStatus?.getStatusFromStateLib().then((result) => {
-                if (result.action && FgStatus.isInProgress(result.action.status)) {
+                if (result?.action && FgStatus.isInProgress(result.action.status)) {
                     return true;
                 }
                 return false;
