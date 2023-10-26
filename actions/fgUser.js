@@ -71,11 +71,13 @@ class FgUser {
 
     async isInAdminGroup() {
         const grpIds = appConfig.getConfig().fgAdminGroups;
+        logger.info(`isInAdminGroup- ${JSON.stringify(grpIds)}`);
         return !grpIds?.length ? false : this.isInGroups(grpIds);
     }
 
     async isInUserGroup() {
         const grpIds = appConfig.getConfig().fgUserGroups;
+        logger.info(`isInUserGroup- ${JSON.stringify(grpIds)}`);
         return !grpIds?.length ? true : this.isInGroups(grpIds);
     }
 
@@ -86,7 +88,7 @@ class FgUser {
 
     async isAdmin() {
         const dr = await sharepoint.getDriveRoot(this.at);
-        logger.info(`isAdmin- ${dr}`);
+        logger.info(`isAdmin- ${JSON.stringify(dr)}`);
         return dr ? this.isInAdminGroup() : false;
     }
 }
