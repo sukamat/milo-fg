@@ -36,16 +36,18 @@ class FgUser {
     }
 
     async isInGroups(grpIds) {
+        logger.info(`isInGroups- ${grpIds}`);
         if (!grpIds?.length) return false;
         const appAt = await sharepointAuth.getAccessToken();
         // eslint-disable-next-line max-len
         const numGrps = grpIds.length;
         let url = appConfig.getConfig().groupCheckUrl || '';
+        logger.info(`isInGroups- ${url}`);
         url += `&$filter=id eq '${this.userOid}'`;
         let found = false;
         for (let c = 0; c < numGrps; c += 1) {
             const grpUrl = url.replace('{groupOid}', grpIds[c]);
-            logger.debug(`isInGroups-URL- ${grpUrl}`);
+            logger.info(`isInGroups-URL- ${grpUrl}`);
             // eslint-disable-next-line no-await-in-loop
             found = await fetch(grpUrl, {
                 headers: {
@@ -54,7 +56,7 @@ class FgUser {
             }).then((d) => d.json()).then((d1) => {
                 if (d1.error) {
                     // When user dooes not have access to group an error is also returned
-                    logger.debug(`Error while getting member info ${JSON.stringify(d1)}`);
+                    logger.info(`Error while getting member info ${JSON.stringify(d1)}`);
                 }
                 return d1?.value?.length && true;
             }).catch((err) => {
@@ -63,6 +65,7 @@ class FgUser {
             });
             if (found) break;
         }
+        logger.info(`isInGroups- ${found}`);
         return found === true;
     }
 
