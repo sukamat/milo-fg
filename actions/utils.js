@@ -22,8 +22,6 @@ const COPY_ACTION = 'copyAction';
 const PROMOTE_ACTION = 'promoteAction';
 const PROMOTE_BATCH = 'promoteBatch';
 const DELETE_ACTION = 'deleteAction';
-const PREVIEW = 'preview';
-const PUBLISH = 'live';
 
 let eventEmitter = null;
 
@@ -35,7 +33,10 @@ function handleExtension(path) {
     if (path.endsWith('.xlsx')) {
         return path.replace('.xlsx', '.json');
     }
-    return path.substring(0, path.lastIndexOf('.'));
+    if (path.endsWith('.docx')) {
+        return path.substring(0, path.lastIndexOf('.'));
+    }
+    return path;
 }
 
 function getPathFromUrl(url) {
@@ -140,8 +141,6 @@ module.exports = {
     PROMOTE_ACTION,
     PROMOTE_BATCH,
     DELETE_ACTION,
-    PREVIEW,
-    PUBLISH,
     logMemUsage,
     logMemUsageIter,
     actInProgress,
