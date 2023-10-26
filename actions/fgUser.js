@@ -86,6 +86,7 @@ class FgUser {
 
     async isAdmin() {
         const dr = await sharepoint.getDriveRoot(this.at);
+        logger.info(`isAdmin- ${dr}`);
         return dr ? this.isInAdminGroup() : false;
     }
 }
