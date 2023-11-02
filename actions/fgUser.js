@@ -73,7 +73,7 @@ class FgUser {
 
     async isInUserGroup() {
         const grpIds = appConfig.getConfig().fgUserGroups;
-        return !grpIds?.length ? true : this.isInGroups(grpIds);
+        return !grpIds?.length ? false : this.isInGroups(grpIds);
     }
 
     async isUser() {
