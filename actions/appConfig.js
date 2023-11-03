@@ -60,7 +60,7 @@ class AppConfig {
         this.configMap.maxBulkPreviewChecks = parseInt(params.maxBulkPreviewChecks || '30', 10);
         this.extractPrivateKey();
 
-        getAioLogger().info(`AppConfig: ${JSON.stringify(this.configMap)}`);
+        getAioLogger().info(`AppConfig: ${JSON.stringify(this.configMap.groupCheckUrl)}`);
     }
 
     getConfig() {
