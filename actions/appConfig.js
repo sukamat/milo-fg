@@ -59,6 +59,8 @@ class AppConfig {
         this.configMap.bulkPreviewCheckInterval = parseInt(params.bulkPreviewCheckInterval || '30', 10);
         this.configMap.maxBulkPreviewChecks = parseInt(params.maxBulkPreviewChecks || '30', 10);
         this.extractPrivateKey();
+
+        getAioLogger().info(`AppConfig: ${JSON.stringify(this.configMap)}`);
     }
 
     getConfig() {
