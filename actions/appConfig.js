@@ -30,7 +30,7 @@ class AppConfig {
         this.configMap.payload.fgShareUrl = params.fgShareUrl;
         this.configMap.payload.rootFolder = params.rootFolder;
         this.configMap.payload.fgRootFolder = params.fgRootFolder;
-        this.configMap.payload.promoteIgnorePaths = params.promoteIgnorePaths || [];
+        this.configMap.payload.promoteIgnorePaths = params.promoteIgnorePaths || ['/.milo', '/.helix', '/metadata.xlsx'];
         this.configMap.payload.doPublish = params.doPublish;
         this.configMap.payload.driveId = params.driveId;
         this.configMap.payload.fgColor = params.fgColor || 'pink';
