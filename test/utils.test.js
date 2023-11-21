@@ -50,3 +50,13 @@ describe('handleExtension', () => {
         expect(utils.handleExtension('/Sample_Test')).toEqual('/sample-test');
     });
 });
+
+describe('strToArray', () => {
+    const td1 = ['a', 'b', 'c'];
+    test('str to array', () => {
+        expect(utils.strToArray('a,b,c')).toEqual(td1);
+    });
+    test('str to array with array input', () => {
+        expect(utils.strToArray(td1)).toEqual(td1);
+    });
+});
