@@ -16,13 +16,40 @@
 ************************************************************************* */
 
 const { getAioLogger } = require('../utils');
+const { isGrayboxParamsValid } = require('./utils');
+const grayboxConfig = require('./config');
 
 async function main(params) {
     const logger = getAioLogger();
+    let responsePayload;
     logger.info('Graybox Promote Worker invoked');
-    return {
-        body: 'worker invoked successfully!',
-    };
+
+    if (!isGrayboxParamsValid(params)) {
+        responsePayload = 'Required data is not available to proceed with Graybox Promote action.';
+        logger.error(responsePayload);
+        return exitAction({
+            code: 400,
+            payload: responsePayload
+        });
+    }
+
+    grayboxConfig.setGrayboxConfig(params);
+
+    // TODO - find all files in graybox folder for the specified experience
+    // TODO - update docx file before triggering copy
+    // TODO - copy updated docx file to the default content folder
+    // TODO - run the bulk preview action on the list of files that were copied to default tree
+    // TODO - update the project excel file as and when necessary to update the status of the promote action
+
+    responsePayload = 'Graybox Promote Worker action completed';
+    return exitAction({
+        body: responsePayload,
+    });
+}
+
+function exitAction(resp) {
+    grayboxConfig.removePayload();
+    return resp;
 }
 
 exports.main = main;
