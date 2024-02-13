@@ -18,6 +18,7 @@
 const openwhisk = require('openwhisk');
 const { getAioLogger } = require('../utils');
 const grayboxConfig = require('./config');
+const { isGrayboxParamsValid } = require('./utils');
 
 function main(params) {
     const logger = getAioLogger();
@@ -25,8 +26,7 @@ function main(params) {
     let responsePayload;
     logger.info('Graybox Promote action invoked');
     try {
-        const { spToken, experienceName, projectExcelPath } = params;
-        if (!spToken || !experienceName || !projectExcelPath) {
+        if (!isGrayboxParamsValid(params)) {
             responsePayload = 'Required data is not available to proceed with Graybox Promote action.';
             logger.error(responsePayload);
             return exitAction({
