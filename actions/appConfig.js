@@ -81,6 +81,9 @@ class AppConfig {
             siteFgRootPath: this.extractSiteRootPath(params.fgShareUrl),
             urlInfo: payload.adminPageUri ? new UrlInfo(payload.adminPageUri) : null
         };
+
+        // Graybox params
+        payload.experienceName = params.experienceName;
     }
 
     // Activation Payload Related

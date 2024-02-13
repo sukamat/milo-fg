@@ -17,7 +17,7 @@
 
 const { getAioLogger } = require('../utils');
 const { isGrayboxParamsValid } = require('./utils');
-const grayboxConfig = require('./config');
+const grayboxConfig = require('../appConfig');
 
 async function main(params) {
     const logger = getAioLogger();
@@ -33,7 +33,7 @@ async function main(params) {
         });
     }
 
-    grayboxConfig.setGrayboxConfig(params);
+    grayboxConfig.setAppConfig(params);
 
     // TODO - find all files in graybox folder for the specified experience
     // TODO - update docx file before triggering copy

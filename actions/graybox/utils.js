@@ -17,17 +17,14 @@
 
 function isGrayboxParamsValid(params) {
     const {
-        spToken,
-        experienceName,
+        rootFolder,
+        gbRootFolder,
         projectExcelPath,
-        fgSite,
-        fgClientId,
-        fgAuthority,
-        destRootFolder,
-        gbRootFolder
+        experienceName,
+        spToken
     } = params;
 
-    const requiredParams = [spToken, experienceName, projectExcelPath, fgSite, fgClientId, fgAuthority, destRootFolder, gbRootFolder];
+    const requiredParams = [rootFolder, gbRootFolder, projectExcelPath, experienceName, spToken];
 
     // Return true if all required parameters are present
     return !requiredParams.some((param) => !param);

@@ -17,7 +17,7 @@
 
 const openwhisk = require('openwhisk');
 const { getAioLogger } = require('../utils');
-const grayboxConfig = require('./config');
+const grayboxConfig = require('../appConfig');
 const { isGrayboxParamsValid } = require('./utils');
 
 function main(params) {
@@ -35,7 +35,7 @@ function main(params) {
             });
         }
 
-        grayboxConfig.setGrayboxConfig(params);
+        grayboxConfig.setAppConfig(params);
 
         return exitAction(ow.actions.invoke({
             name: 'milo-fg/graybox-promote-worker',
