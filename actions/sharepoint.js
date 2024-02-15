@@ -385,9 +385,12 @@ async function deleteFloodgateDir() {
     return deleteSuccess;
 }
 
-async function updateExcelTable(excelPath, tableName, values) {
+async function updateExcelTable(excelPath, tableName, values, isGraybox = false) {
     const { sp } = await getConfig();
-    const itemId = await getItemId(sp.api.file.get.baseURI, excelPath);
+    let itemId = await getItemId(sp.api.file.get.baseURI, excelPath);
+    if (isGraybox) {
+        itemId = await getItemId(sp.api.file.get.fgBaseURI, excelPath);
+    }
     if (itemId) {
         return executeGQL(`${sp.api.excel.update.baseItemsURI}/${itemId}/workbook/tables/${tableName}/rows`, {
             body: JSON.stringify({ values }),
