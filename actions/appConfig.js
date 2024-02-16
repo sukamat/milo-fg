@@ -84,7 +84,9 @@ class AppConfig {
 
         // Graybox params
         payload.experienceName = params.experienceName;
-        payload.fgRootFolder = params.gbRootFolder;
+        if (params.gbRootFolder) {
+            payload.fgRootFolder = params.gbRootFolder;
+        }
     }
 
     // Activation Payload Related
