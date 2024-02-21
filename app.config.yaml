@@ -117,6 +117,21 @@ application:
               LOG_LEVEL: debug              
             limits:
               timeout: 600000
+          graybox-promote:
+            function: actions/graybox/promote.js
+            web: 'yes'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
+          graybox-promote-worker:
+            function: actions/graybox/promote-worker.js
+            web: 'no'
+            runtime: nodejs:16
+            inputs:
+              LOG_LEVEL: debug
+            limits:
+              timeout: 3600000
+              memorySize: 2048
         triggers:
           everyMin:
             feed: /whisk.system/alarms/interval
