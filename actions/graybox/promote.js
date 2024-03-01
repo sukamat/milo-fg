@@ -17,25 +17,22 @@
 
 const openwhisk = require('openwhisk');
 const { getAioLogger } = require('../utils');
-const grayboxConfig = require('../appConfig');
-const { isGrayboxParamsValid } = require('./utils');
+const { validateAction } = require('./utils');
+const appConfig = require('../appConfig');
 
-function main(params) {
+async function main(params) {
     const logger = getAioLogger();
     const ow = openwhisk();
     let responsePayload;
     logger.info('Graybox Promote action invoked');
     try {
-        if (!isGrayboxParamsValid(params)) {
-            responsePayload = 'Required data is not available to proceed with Graybox Promote action.';
-            logger.error(responsePayload);
-            return exitAction({
-                code: 400,
-                payload: responsePayload
-            });
+        appConfig.setAppConfig(params);
+        const grpIds = appConfig.getConfig().fgUserGroups;
+        const vActData = await validateAction(params, grpIds);
+        if (vActData && vActData.code !== 200) {
+            logger.info(`Validation failed: ${JSON.stringify(vActData)}`);
+            return exitAction(vActData);
         }
-
-        grayboxConfig.setAppConfig(params);
 
         return exitAction(ow.actions.invoke({
             name: 'milo-fg/graybox-promote-worker',
@@ -67,7 +64,7 @@ function main(params) {
 }
 
 function exitAction(resp) {
-    grayboxConfig.removePayload();
+    appConfig.removePayload();
     return resp;
 }
 
